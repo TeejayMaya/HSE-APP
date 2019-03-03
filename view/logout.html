@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<div id="LogoutPage" data-role="page" data-theme="b">
+<script>
+localStorage.removeItem('userlogin');
+localStorage.removeItem('companyid');
+localStorage.removeItem('companyname');
+localStorage.removeItem('companylogo');
+localStorage.removeItem('userid');
+localStorage.removeItem('username');
+localStorage.removeItem('useremail');
+localStorage.removeItem('LoginDetails');
+localStorage.removeItem('LoginToken');
+
+var mydate = new Date();
+mydate.setTime(mydate.getTime() - 1);
+document.cookie = "cookid=; expires=" + mydate.toGMTString(); 
+document.cookie = "cookname=; expires=" + mydate.toGMTString(); 
+document.cookie = "cookpass=; expires=" + mydate.toGMTString(); 
+
+window.location.href = "/login";
+</script>
+</div>
+</body>
+</html>
