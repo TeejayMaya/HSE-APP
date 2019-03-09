@@ -1,6 +1,7 @@
 //Package/Module dependencies declaration
 var http = require('http');
 var path = require('path');
+var cors = require('cors')
 var formData = require("express-form-data");
 var os = require("os");
 var session = require('express-session');
@@ -11,14 +12,20 @@ var fs = require('fs');
 var dateTime = require('node-datetime');
 var nodemailer = require('nodemailer');
 var express = require('express');
+var forever = require('forever-monitor');
 //var mysql = require('mysql');
 var connection = require('./routes/config');
 var customFunctions = require('./routes/functions');
 var model = require('./routes/models');
 var app = express();
 
-//Settings
+//Settings Set-Up
 // all environments
+var child = new (forever.Monitor)('index.js', {
+    max: 3,
+    silent: true,
+    args: []
+});
 app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/view');
 //app.set('view engine', 'ejs');
@@ -29,7 +36,7 @@ app.use(session({
   saveUninitialized: true,
   cookie: { maxAge: 60000 }
 }));
-
+app.use(cors());
 const options = {
   uploadDir: os.tmpdir(),
   autoClean: true
@@ -51,7 +58,7 @@ app.use(fileUpload({
 global.db = connection;
 
 //Routers (Frontend/View)
-app.get('/', function(req, res) {
+app.all('/', function(req, res) {
    res.sendFile(__dirname + '/view/index.html');
 });
 app.get('/index', function(req, res) {
@@ -155,6 +162,25 @@ app.use(function(error, req, res, next) {
    console.log(error);
    res.sendFile(__dirname + '/view/500.html');
 });
+//Auto restart server on crash
+child.start();
+child.on('watch:restart', function(info) {
+    console.error('Restaring script because ' + info.file + ' changed');
+});
+
+child.on('restart', function() {
+    console.error('Forever restarting script for ' + child.times + ' time');
+});
+
+child.on('exit:code', function(code) {
+    console.error('Forever detected script exited with code ' + code);
+});
 
 //Server - Port
-app.listen(3000);
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+app.listen(port, function() {
+    console.log('Our app is running on http://localhost:' + port);
+});
